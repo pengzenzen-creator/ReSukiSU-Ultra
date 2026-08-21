@@ -26,6 +26,7 @@
 #include <net/sock.h>
 #include <linux/netisolate_def.h>
 #include <linux/fs.h>
+#include <linux/slab.h>
 #include <linux/uaccess.h>
 #include <linux/icmp.h>
 #include <net/netfilter/ipv4/nf_reject.h>
@@ -259,16 +260,24 @@ static bool file_read_bool(const char *path)
 static void file_read_uids(const char *path)
 {
     struct file *f;
-    char buf[4096];
+    char *buf;
     ssize_t n;
 
     f = filp_open(path, O_RDONLY, 0);
     if (IS_ERR(f))
         return;
-    n = kernel_read(f, buf, sizeof(buf) - 1, &f->f_pos);
-    filp_close(f, NULL);
-    if (n <= 0)
+    /* 动态分配: 避免 4KB 栈数组触发 frame-larger-than (DDK Werror) */
+    buf = kzalloc(4096, GFP_KERNEL);
+    if (!buf) {
+        filp_close(f, NULL);
         return;
+    }
+    n = kernel_read(f, buf, 4095, &f->f_pos);
+    filp_close(f, NULL);
+    if (n <= 0) {
+        kfree(buf);
+        return;
+    }
     buf[n] = '\0';
 
     /* 解析每行一个 UID */
@@ -292,6 +301,7 @@ static void file_read_uids(const char *path)
             p = end + 1;
         }
     }
+    kfree(buf);
 }
 
 static int __init netisolate_init(void)
