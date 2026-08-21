@@ -82,6 +82,8 @@ jobs:
       expected_pr_build_hash: ${{ needs.generate-key.outputs.expected_hash || '' }}
 
   build-ksud:
+    # build-lkm 的 5.10 旧内核失败不影响目标 (android15-6.6), 只要 artifact 存在就继续打包
+    if: ${{ !cancelled() && needs.build-lkm.result != 'cancelled' }}
     needs: [build-ksuinit, build-lkm]
     strategy:
       matrix:
