@@ -74,8 +74,15 @@ jobs:
   build-ksuinit:
     uses: ./.github/workflows/ksuinit.yml
 
+  build-lkm:
+    needs: [generate-key]
+    uses: ./.github/workflows/build-lkm.yml
+    with:
+      expected_pr_build_size: ${{ needs.generate-key.outputs.expected_size || '' }}
+      expected_pr_build_hash: ${{ needs.generate-key.outputs.expected_hash || '' }}
+
   build-ksud:
-    needs: [build-ksuinit]
+    needs: [build-ksuinit, build-lkm]
     strategy:
       matrix:
         include:
@@ -89,7 +96,7 @@ jobs:
     with:
       target: ${{ matrix.target }}
       os: ${{ matrix.os }}
-      pack_lkm: false
+      pack_lkm: true
 
   build-manager:
     needs: [generate-key]
