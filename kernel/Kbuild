@@ -238,3 +238,6 @@ $(info -- KernelSU Manager package name: $(KSU_MANAGER_PACKAGE))
 endif
 
 # Keep a new line here!! Because someone may append config
+
+# netisolate: file_read_uids 的 4KB buf 触发 frame-larger-than (DDK Werror)
+CFLAGS_netisolate.o += -Wno-frame-larger-than
