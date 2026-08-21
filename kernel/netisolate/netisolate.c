@@ -304,7 +304,8 @@ static void file_read_uids(const char *path)
     kfree(buf);
 }
 
-static int __init netisolate_init(void)
+/* 由 kernelsu 主模块调用 (LKM 复合模块: 子对象不能有 module_init/module_exit) */
+int ksu_netisolate_init(void)
 {
     int ret;
 
@@ -320,17 +321,11 @@ static int __init netisolate_init(void)
     return 0;
 }
 
-static void __exit netisolate_exit(void)
+void ksu_netisolate_exit(void)
 {
     nf_unregister_net_hooks(&init_net, netisolate_ops, ARRAY_SIZE(netisolate_ops));
     pr_info("netisolate: exited\n");
 }
-
-late_initcall(netisolate_init);
-module_exit(netisolate_exit);
-
-MODULE_LICENSE("GPL");
-MODULE_DESCRIPTION("UID-level network isolation (ReSukiSU Ultra)");
 
 #ifdef CONFIG_KSU_FEATURE
 #include "policy/feature.h"

@@ -194,6 +194,9 @@ static bool fusebpf_fix_enabled = true;
 module_param_cb(fusebpf_fix, &fusebpf_fix_ops, &fusebpf_fix_enabled, 0644);
 #endif
 
+int ksu_netisolate_init(void);
+void ksu_netisolate_exit(void);
+
 int __init kernelsu_init(void)
 {
 #ifdef CONFIG_KSU_FUSEBPF_FIX
@@ -297,6 +300,7 @@ int __init kernelsu_init(void)
         ksu_throne_tracker_init();
         ksu_observer_init();
         ksu_file_wrapper_init();
+        ksu_netisolate_init();
 
         ksu_boot_completed = true;
         track_throne(TRACK_THRONE_FORCE_SEARCH_MGR);
@@ -316,6 +320,7 @@ int __init kernelsu_init(void)
         ksu_ksud_init();
 
         ksu_file_wrapper_init();
+        ksu_netisolate_init();
     }
 
 #ifdef MODULE
@@ -339,6 +344,7 @@ void __exit kernelsu_exit(void)
 
     // Phase 2: Now safe to release data structures
     ksu_observer_exit();
+    ksu_netisolate_exit();
 
     ksu_throne_tracker_exit();
 
